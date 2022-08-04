@@ -14,13 +14,16 @@ public class LogFileRemover {
         int length = extension.length;
         int count = 0;
         String fileExtension = filename.split("\\.")[filename.split("\\.").length-1];
+
         for(int i=0; i<length; i++) {
             if(fileExtension.equalsIgnoreCase(extension[i])) {
                 count++;
             }
         }
         if(count != 0) {
+
             isPresent = true;
+            System.out.println();
         }
         return isPresent;
     }
@@ -33,13 +36,23 @@ public class LogFileRemover {
 
         for (int i = 0; i < listOfFiles.length; i++) {
             if (listOfFiles[i].isFile()) {
-               filename = listOfFiles[i].getName();
-               if(isPresent(extensions, filename)) {
-                   filesWithDefinedExtensions.add(filename);
-               }
+                filename = listOfFiles[i].getName();
+                if(isPresent(extensions, filename)) {
+                    filesWithDefinedExtensions.add(filename);
+                }
             }
         }
         return filesWithDefinedExtensions;
+    }
+
+    public static long totalDiskSpace() {
+        File[] drivers = File.listRoots();
+        long total = 0;
+
+        for(int i=0; i< drivers.length; i++) {
+            total = total + new File(drivers[i].toString()).getFreeSpace()/1024/1024;
+        }
+        return total;
     }
 
     public static String getSizeOfFile(String filepath) throws IOException {
@@ -55,48 +68,101 @@ public class LogFileRemover {
         File file = new File(filepath);
         file.delete();
     }
-    public static void main(String[] args) throws IOException {
+
+        public static int findCountOfAFile(String ex, ArrayList<String> filenames) {
+            int count = 0;
+            String extensionFromFile;
+            for(int i=0; i<filenames.size(); i++) {
+                extensionFromFile = filenames.get(i).split("\\.")[filenames.get(i).split("\\.").length-1];
+                if(extensionFromFile.equalsIgnoreCase(ex)) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public static void main(String[] args) throws IOException {
         ArrayList<String> files;
         ArrayList<String> pathsWithFilenames = new ArrayList<>();
-        try {
-            String path_flag = args[0];
-            String maxSizeLimit_flag = args[1];
-            String logFileExtension_flag = args[2];
+        ArrayList<String> deletedFiles = new ArrayList<>();
 
-            if (args[0].split("=")[0].equalsIgnoreCase("-path") && args[0].split("=")[0].equalsIgnoreCase("-maxSizeLimit") && args[0].split("=")[0].equalsIgnoreCase("-logFileExtension")) {
+        int deleteCount = 0;
+        int notDeleteCount = 0;
+        int totalSize = 0;
+
+        long diskSpaceBefore =  totalDiskSpace(); // in KB
+        long diskSpaceAfter;
+
+
+        String path_flag = args[0];
+        String maxSizeLimit_flag = args[1];
+        String logFileExtension_flag = args[2];
+
+            if (path_flag.split("=")[0].equalsIgnoreCase("-path") && maxSizeLimit_flag.split("=")[0].equalsIgnoreCase("-maxSizeLimit") && logFileExtension_flag.split("=")[0].equalsIgnoreCase("-logFileExtension")) {
                 String path = path_flag.split("=")[1];
                 String maxSize = maxSizeLimit_flag.split("=")[1];
                 String[] extensions = logFileExtension_flag.split("=")[1].split(",");
-                System.out.println();
-                System.out.println("Searching files with below extensions:");
-                System.out.println("=============================================================================================================================");
-                for (int j = 0; j < extensions.length; j++) {
-                    System.out.println((j + 1) + ". " + extensions[j]);
-                }
-                System.out.println();
-
                 files = findLogs(path, extensions);
+
+                System.out.println("File names with specified extensions");
+                System.out.println("====================================");
+                for(int i=0; i<files.size(); i++) {
+                    System.out.println((i+1) + ". " + files.get(i));
+                }
+
+                System.out.println();
+                for(int i=0; i<extensions.length; i++) {
+                    System.out.println("Total ." + extensions[i] +" files : " + findCountOfAFile(extensions[i], files) );
+                }
+
+
                 for (int i = 0; i < files.size(); i++) {
                     pathsWithFilenames.add(path + "/" + files.get(i));
                 }
 
+                int k=0;
+
                 for (String p : pathsWithFilenames) {
                     if (Double.valueOf(getSizeOfFile(p)) >= Double.valueOf(maxSize)) {
-                        System.out.println("=============================================================================================================================");
-                        System.out.println("File location : " + p);
-                        System.out.println("File size : " + getSizeOfFile(p));
-                        System.out.println("The size is more than permissible limit i.e. " + maxSize + " KB");
-                        deleteFile(p);
-                        System.out.println("FILE DELETED");
-                    } else {
-                        System.out.println("=============================================================================================================================");
-                        System.out.println("File location : " + p);
-                        System.out.println("File size : " + getSizeOfFile(p));
-                        System.out.println("The size is not more than permissible limit i.e. " + maxSize + " KB");
-                        System.out.println("FILE NOT DELETED");
 
+                        deletedFiles.add(files.get(k));
+                        deleteCount++;
+                        totalSize = totalSize + Integer.valueOf(getSizeOfFile(path + "/" + files.get(k)));
+
+
+//                        System.out.println("File size : " + getSizeOfFile(p) + " KB");
+//                        System.out.println("The size is more than permissible limit i.e. " + maxSize + " KB");
+                        deleteFile(p);
+                        // print before and after disk space
+                        // print the count of files it deleted
                     }
+                    k++;
                 }
+                if(deletedFiles.size() != 0) {
+                    System.out.println();
+                    System.out.println("List of deleted files which are more than " + maxSize +" KB");
+                    System.out.println("==============================================================");
+                    for(String deletedFile : deletedFiles) {
+                        System.out.println(deletedFile);
+                    }
+
+                    System.out.println();
+                    System.out.println("==============================================================");
+
+                    System.out.println( totalSize + " KB disk space released");
+                    System.out.println("==============================================================");
+                    System.out.println();
+                    System.out.println("Total disk space before clearing logs : " + diskSpaceBefore + " MB");
+                    diskSpaceAfter = totalDiskSpace();
+                    System.out.println("Total disk space after clearing logs : " + diskSpaceAfter + " MB");
+
+
+                } else {
+                    System.out.println();
+                    System.out.println("All files are less than " + maxSize + " KB");
+                    System.out.println("No files are deleted");
+                }
+
             } else {
                 System.out.println("=============================================================================================================================");
                 System.out.println("RUN FAILED");
@@ -113,24 +179,6 @@ public class LogFileRemover {
                 System.out.println("=============================================================================================================================");
 
             }
-        }
-        catch(Exception e) {
-            System.out.println("=============================================================================================================================");
-            System.out.println("RUN FAILED");
-            System.out.println("=============================================================================================================================");
-            System.out.println();
-            System.out.println("Please read the guide below for running the tool");
-            System.out.println();
-            System.out.println("To run the jar file you should have three things");
-            System.out.println("\t1)\tpath [ folder path of the log files ]");
-            System.out.println("\t2)\tmaxSizeLimit [ file size limit in kilobytes ]");
-            System.out.println("\t3)\tlogFileExtension [ extensions of the files you want to delete. extensions should be separated by comma (\",\") ]");
-            System.out.println();
-            System.out.println("Example: java -jar logrem.jar -path=/path/of/log/folders -maxSizeLimit=3 -logFileExtension=log,out");
-            System.out.println("=============================================================================================================================");
-
-        }
-
 
     }
 }
