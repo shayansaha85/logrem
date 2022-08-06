@@ -11,7 +11,9 @@ This is a java project which is created for developing a java command line utili
 - Open command prompt/powershell/terminal in the same location where the *logRemoval.jar* file is present
 - Run below command in order to execute
 ```bash
-java -jar logrem.jar -path=/path/of/log/folders -maxSizeLimit=2048 -logFileExtension=log,out,tmp
+java -jar logrem.jar -path=/path/of/log/folders -maxSizeLimit=5M -logFileExtension=log,out,tmp
 ```
-<i>**Note :** maxSize flag is in KiloBytes format</i>
+<i>**Note :** maxSize flag can be entered in any format.</i>
+<br />
+<i>e.g. If user want to delete file which are more than 10KB, user will enter **-maxSizeLimit=10K**, if 10MB, user will enter **-maxSizeLimit=10M**, if 10GB, user will enter **-maxSizeLimit=10G**</i>
 - This utility is platform independent, and hence can be used in any operating system

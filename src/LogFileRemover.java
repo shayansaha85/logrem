@@ -28,6 +28,27 @@ public class LogFileRemover {
         return isPresent;
     }
 
+    public static String fetchSize(String maxSizeFlag) {
+        String size = maxSizeFlag.split("=")[maxSizeFlag.split("=").length-1];
+        String format = Character.toString(size.charAt(size.length()-1));
+        String sizeValue = size.substring(0, size.length()-1);
+        String returnSize = "";
+
+        if(format.equalsIgnoreCase("m")) {
+            returnSize = String.valueOf(Double.valueOf(sizeValue)*1024);
+
+
+        }
+        else if(format.equalsIgnoreCase("k")) {
+            returnSize = sizeValue;
+        }
+        else if(format.equalsIgnoreCase("g")) {
+            returnSize = String.valueOf(Double.valueOf(sizeValue)*1024*1024);
+        }
+
+        return returnSize;
+    }
+
     public static ArrayList<String> findLogs(String folderPath, String[] extensions) {
         ArrayList<String> filesWithDefinedExtensions = new ArrayList<>();
         String filename = "";
@@ -100,7 +121,8 @@ public class LogFileRemover {
 
             if (path_flag.split("=")[0].equalsIgnoreCase("-path") && maxSizeLimit_flag.split("=")[0].equalsIgnoreCase("-maxSizeLimit") && logFileExtension_flag.split("=")[0].equalsIgnoreCase("-logFileExtension")) {
                 String path = path_flag.split("=")[1];
-                String maxSize = maxSizeLimit_flag.split("=")[1];
+                String maxSize = fetchSize(maxSizeLimit_flag);
+                System.out.println(maxSize);
                 String[] extensions = logFileExtension_flag.split("=")[1].split(",");
                 files = findLogs(path, extensions);
 
@@ -128,13 +150,7 @@ public class LogFileRemover {
                         deletedFiles.add(files.get(k));
                         deleteCount++;
                         totalSize = totalSize + Integer.valueOf(getSizeOfFile(path + "/" + files.get(k)));
-
-
-//                        System.out.println("File size : " + getSizeOfFile(p) + " KB");
-//                        System.out.println("The size is more than permissible limit i.e. " + maxSize + " KB");
                         deleteFile(p);
-                        // print before and after disk space
-                        // print the count of files it deleted
                     }
                     k++;
                 }
