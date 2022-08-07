@@ -16,8 +16,8 @@ java -jar logrem.jar -path=/path/of/log/folders -maxSizeLimit=5M -logFileExtensi
 <i>**Note :** maxSize flag can be entered in any format.</i>
 <br />
 <i>e.g. If user want to delete files which are</i>
-	- More than 10KB, user will enter **-maxSizeLimit=10K**
-	- More than 10MB, user will enter **-maxSizeLimit=10M**
-	- More than 10GB, user will enter **-maxSizeLimit=10G**
+- More than 10KB, user will enter **-maxSizeLimit=10K**
+- More than 10MB, user will enter **-maxSizeLimit=10M**
+- More than 10GB, user will enter **-maxSizeLimit=10G**
 <br />
 - This utility is platform independent, and hence can be used in any operating system
